@@ -1,0 +1,199 @@
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
+import java.util.Scanner;
+
+public class Prova {
+
+	public static void main(String[] args) {
+		String msg = "Para inserir um novo candidato digite 1 ou digite 0 para encerrar: ";
+        System.out.println(msg);
+        Scanner scanner = new Scanner(System.in);
+        int entrada = scanner.nextInt();
+        limpaBuffer(scanner);
+        int quantidadeCandidatos = 0;
+        int totalBeneficiarios = 0;
+        String[] usuariosMaioresValores = new String[1];
+        String[] usuariosMaioresTempos = new String[1];
+        double maiorValor = 0.0, maiorValorComparar = 0.0;
+        int maiorTempo = 0, maiorTempoComparar = 0;
+        double totalValorConcedido = 0.0;
+        String[] nome = new String[1000];
+        String dataNascimentoString;
+        LocalDate[] dataNascimento = new LocalDate[1000];
+        int[] quantidadeFuncionarios = new int[1000];
+        int[] quantidadeMesesDesempregado = new int[1000];
+        String[] uf = new String[1000];
+        String[] categoria = new String[1000];
+        Double[] valorBeneficio = new Double[1000];
+        String[] aposentado = new String[1000];
+        String[] concedeBeneficio = new String[1000];
+        int[] quantidadeMesesBeneficio = new int[1000];
+        double valorBeneficioAntes = 0.0;
+
+        while (entrada != 0) {
+            if (entrada != 1) {
+                System.out.println("Número inválido. " + msg);
+                entrada = scanner.nextInt();
+                limpaBuffer(scanner);
+            } else {
+                //Entrada de dados
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+                Double validaValorBeneficio = 0.0;
+                boolean erro = true;
+
+                System.out.println("Digite o nome do candidato: ");
+                nome[quantidadeCandidatos] = scanner.nextLine();
+                System.out.println("Digite a data de nascimento no formato dd/mm/aaaa:");
+                dataNascimentoString = scanner.nextLine();
+                while (!validaData(dataNascimentoString, formatter)) {
+                    System.out.println("Data inválida. Digite a data de nascimento no formato dd/mm/aaaa:");
+                    dataNascimentoString = scanner.nextLine();
+                }
+
+                dataNascimento[quantidadeCandidatos] = LocalDate.parse(dataNascimentoString, formatter);
+                System.out.println("Escolha uma opção para selecionar a categoria:\n1 - Empregado\n2 - Empregador\n3 - Desempregado");
+                String valor;
+                aposentado[quantidadeCandidatos] = "N";
+                switch (scanner.nextLine()) {
+                    case "1":
+                        categoria[quantidadeCandidatos] = "1";
+                        System.out.println("O empregado é aposentado?\nS - Sim\nN - Não");
+                        valor = scanner.nextLine();
+                        while (!valor.equals("N") && !valor.equals("S")) {
+                            System.out.println("Opção inválida. O empregado é aposentado?\nS - Sim\nN - Não");
+                            valor = scanner.nextLine();
+
+                        }
+                        if (valor.equals("S")) {
+                            aposentado[quantidadeCandidatos] = "S";
+                        }
+                        break;
+                    case "2":
+                        categoria[quantidadeCandidatos] = "2";
+                        System.out.println("Qual a quantidade de funcionários?");
+                        quantidadeFuncionarios[quantidadeCandidatos] = scanner.nextInt();
+                        limpaBuffer(scanner);
+                        break;
+                    case "3":
+                        categoria[quantidadeCandidatos] = "3";
+                        System.out.println("Há quantos meses está desempregado?");
+                        quantidadeMesesDesempregado[quantidadeCandidatos] = scanner.nextInt();
+                        limpaBuffer(scanner);
+                        break;
+                    default:
+                        System.out.println("Opção inválida.");
+                        break;
+                }
+                System.out.println("Digite o código UF do estado do candidato:");
+                uf[quantidadeCandidatos] = scanner.nextLine();
+                System.out.println("Digite o valor do benefício:");
+                while (erro) {
+                    scanner = new Scanner(System.in);
+                    try {
+                        validaValorBeneficio = scanner.nextDouble();
+                        limpaBuffer(scanner);
+                        erro = false;
+                    } catch (Exception e) {
+                        System.out.println("Valor inválido, separe os decimais por vírgula. Digite o valor do benefício:");
+                        erro = true;
+                    }
+                }
+                valorBeneficio[quantidadeCandidatos] = validaValorBeneficio;
+                concedeBeneficio[quantidadeCandidatos] = "N";
+                quantidadeMesesBeneficio[quantidadeCandidatos] = 1;
+
+                //Regras de negócio
+                valorBeneficioAntes = valorBeneficio[quantidadeCandidatos];
+                if (ChronoUnit.YEARS.between(dataNascimento[quantidadeCandidatos], LocalDate.now()) >= 20) {
+                    totalBeneficiarios++;
+                    concedeBeneficio[quantidadeCandidatos] = "S";
+                    if (categoria[quantidadeCandidatos].equals("2")) {
+                        quantidadeMesesBeneficio[quantidadeCandidatos] = 7;
+                    } else if (categoria[quantidadeCandidatos].equals("1") && aposentado[quantidadeCandidatos].equals("S")) {
+                        quantidadeMesesBeneficio[quantidadeCandidatos] = 6;
+                    }
+                    if (categoria[quantidadeCandidatos].equals("2")) {
+                        if (quantidadeFuncionarios[quantidadeCandidatos] <= 20) {
+                            valorBeneficio[quantidadeCandidatos] = valorBeneficio[quantidadeCandidatos] + (valorBeneficio[quantidadeCandidatos] * 15) / 100;
+                        }
+                        if (quantidadeFuncionarios[quantidadeCandidatos] <= 10) {
+                            quantidadeMesesBeneficio[quantidadeCandidatos] = 10;
+                        }
+                    }
+                    if (uf[quantidadeCandidatos].equals("PE")) {
+                        valorBeneficio[quantidadeCandidatos] = valorBeneficio[quantidadeCandidatos] + (valorBeneficio[quantidadeCandidatos] * 14) / 100;
+                    }
+                    totalValorConcedido = totalValorConcedido + valorBeneficio[quantidadeCandidatos];
+                }
+                maiorValorComparar = valorBeneficio[quantidadeCandidatos];
+                if (maiorValorComparar > maiorValor) {
+                    maiorValor = maiorValorComparar;
+                    usuariosMaioresValores[0] = nome[quantidadeCandidatos];
+                }
+
+                maiorTempoComparar = quantidadeMesesBeneficio[quantidadeCandidatos];
+                if (maiorTempoComparar > maiorTempo) {
+                    maiorTempo = maiorTempoComparar;
+                    usuariosMaioresTempos[0] = nome[quantidadeCandidatos];
+                }
+
+                //Mostrar dados iniciais
+                System.out.println("\n\nNome: " + nome[quantidadeCandidatos]);
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                System.out.println("Data de nascimento: " + (dataNascimento[quantidadeCandidatos].format(dateTimeFormatter)));
+                if (categoria[quantidadeCandidatos].equals("1")) {
+                    System.out.println("Categoria: Empregado");
+                } else if (categoria[quantidadeCandidatos].equals("2")) {
+                    System.out.println("Categoria: Empregador");
+                } else {
+                    System.out.println("Categoria: Desempregado");
+                }
+
+                if (ChronoUnit.YEARS.between(dataNascimento[quantidadeCandidatos], LocalDate.now()) >= 18) {
+                    System.out.println("O candidato é maior de idade");
+                } else {
+                    System.out.println("O candidato é menor de idade");
+                }
+                if (aposentado[quantidadeCandidatos].equals("S")) {
+                    System.out.println("O candidato é aposentado");
+                }
+                System.out.println("Terá um acrescimo de: " + (valorBeneficio[quantidadeCandidatos] - valorBeneficioAntes));
+                System.out.println("Receberá o benefício por: " + quantidadeMesesBeneficio[quantidadeCandidatos] + " meses");
+                System.out.println("O valor do beneficio será de R$ " + valorBeneficio[quantidadeCandidatos]);
+
+                quantidadeCandidatos++;
+                System.out.println("\n\n\nDeseja adicionar mais um candidato?\n1 - Sim\n0 - Não");
+                entrada = scanner.nextInt();
+                limpaBuffer(scanner);
+            }
+        }
+
+        System.out.println("Total de usuários lidos: " + (quantidadeCandidatos));
+        System.out.println("Total de beneficiários: " + (totalBeneficiarios));
+        System.out.println("Total do valor concedido: " + totalValorConcedido);
+        System.out.println("Candidato que irá receber o maior valor: " + usuariosMaioresValores[0]);
+        System.out.println("Candidato que irá receber por mais tempo: " + usuariosMaioresTempos[0]);
+
+        System.out.println("\nFim!");
+	}
+	
+	private static void limpaBuffer(Scanner scanner) {
+        if (scanner.hasNextLine()) {
+            scanner.nextLine();
+        }
+    }
+
+    private static boolean validaData(String data, DateTimeFormatter formatter) {
+        try {
+            LocalDate d = LocalDate.parse(data, formatter);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+    }
+
+}
